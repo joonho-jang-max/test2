@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=375, initial-scale=1.0">
+  <title>랭킹 NOVEL</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    }
+
+    .app {
+      width: 375px;
+      min-height: 998px;
+      background: #121212;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      width: 375px;
+      height: 50px;
+      background: #000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 8px;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-icons svg { display: block; }
+
+    /* ── Nav Bar ── */
+    .nav-bar {
+      width: 375px;
+      height: 44px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+    .nav-back {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .nav-title {
+      font-size: 17px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Genre Chips ── */
+    .chips-wrap {
+      width: 375px;
+      height: 48px;
+      background: #121212;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      overflow-x: auto;
+      gap: 6px;
+      scrollbar-width: none;
+    }
+    .chips-wrap::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 16px;
+      background: #1c1c1c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 400;
+      color: #f8f8f8;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: #f8f8f8;
+      color: #121212;
+      font-weight: 600;
+    }
+
+    /* ── Filter Row ── */
+    .filter-row {
+      width: 375px;
+      height: 37px;
+      background: #121212;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid #222;
+    }
+    .filter-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .checkbox {
+      width: 17px;
+      height: 17px;
+      border: 1.5px solid #909090;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .filter-label {
+      font-size: 13px;
+      font-weight: 400;
+      color: #f8f8f8;
+      font-family: 'Apple SD Gothic Neo', 'Pretendard', sans-serif;
+    }
+    .filter-notice {
+      font-size: 12px;
+      font-weight: 500;
+      color: #f8f8f8;
+      opacity: 0.5;
+    }
+
+    /* ── Ranking List ── */
+    .ranking-list {
+      width: 375px;
+      padding: 12px 16px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ranking-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ── Card ── */
+    .card {
+      width: 109px;
+      flex-shrink: 0;
+    }
+
+    .card-thumb {
+      width: 109px;
+      height: 158px;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-thumb-gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+    }
+
+    /* Badges */
+    .badge-tl {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      background: rgba(0,0,0,0.80);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+    .badge-trophy {
+      position: absolute;
+      top: 0;
+      right: 5px;
+      z-index: 3;
+    }
+    .badge-series {
+      position: absolute;
+      bottom: 22px;
+      right: 4px;
+      width: 28px;
+      height: 28px;
+      z-index: 3;
+      border-radius: 3px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .badge-free {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.80);
+      border-radius: 2px;
+      padding: 2px 5px 3px;
+      font-size: 10px;
+      font-weight: 500;
+      color: #fff;
+      z-index: 3;
+      white-space: nowrap;
+    }
+
+    /* Content */
+    .card-content {
+      padding-top: 5px;
+    }
+    .rank-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      margin-bottom: 3px;
+      line-height: 1;
+    }
+    .rank-num {
+      font-family: 'Avenir Next', 'Georgia', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #f8f8f8;
+      line-height: 1;
+    }
+    .rank-change {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      margin-bottom: 3px;
+    }
+    .rank-up-icon {
+      width: 0;
+      height: 0;
+      border-left: 3.5px solid transparent;
+      border-right: 3.5px solid transparent;
+      border-bottom: 4.5px solid #ff2f5d;
+    }
+    .rank-down-icon {
+      width: 0;
+      height: 0;
+      border-left: 3.5px solid transparent;
+      border-right: 3.5px solid transparent;
+      border-top: 4.5px solid #4488ff;
+    }
+    .rank-change-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ff2f5d;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .rank-change-num.down { color: #4488ff; }
+    .rank-new {
+      font-size: 9px;
+      font-weight: 700;
+      color: #f8a600;
+      font-family: 'Pretendard', sans-serif;
+      margin-bottom: 3px;
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 2px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 1px 3px 2px;
+      border-radius: 2px;
+      letter-spacing: 0.2px;
+      line-height: 1.2;
+    }
+    .tag-up {
+      background: rgba(0,161,84,0.15);
+      color: #00a154;
+      border: 0.5px solid rgba(0,161,84,0.5);
+    }
+    .tag-in {
+      background: rgba(255,47,93,0.15);
+      color: #ff2f5d;
+      border: 0.5px solid rgba(255,47,93,0.5);
+    }
+    .tag-exclusive {
+      background: rgba(100,80,255,0.15);
+      color: #6450ff;
+      border: 0.5px solid rgba(100,80,255,0.5);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #f8f8f8;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: keep-all;
+    }
+    .card-sub {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .star-icon {
+      color: #00dc64;
+      font-size: 9px;
+      line-height: 1;
+    }
+    .sub-text {
+      font-size: 11px;
+      font-weight: 500;
+      color: #00dc64;
+    }
+
+    /* ── Floating GNB Tabs ── */
+    .gnb-wrap {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 218px;
+    }
+    .gnb-pill {
+      background: #2c2c2c;
+      border-radius: 24px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 3px;
+      gap: 2px;
+    }
+    .gnb-tab {
+      flex: 1;
+      height: 34px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #f8f8f8;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .gnb-tab.active {
+      background: #fff;
+      color: #2c2c2c;
+      font-weight: 600;
+    }
+
+    /* thumbnail placeholder gradients */
+    .bg-1 { background: linear-gradient(160deg,#1b1035 0%,#3a1060 60%,#1a0a30 100%); }
+    .bg-2 { background: linear-gradient(160deg,#200a18 0%,#481030 60%,#200818 100%); }
+    .bg-3 { background: linear-gradient(160deg,#0d1f10 0%,#1a3a20 60%,#0a1810 100%); }
+    .bg-4 { background: linear-gradient(160deg,#0f1a2e 0%,#1a2d4a 60%,#0a1020 100%); }
+    .bg-5 { background: linear-gradient(160deg,#2a1510 0%,#5a2010 60%,#2a1008 100%); }
+    .bg-6 { background: linear-gradient(160deg,#181028 0%,#301848 60%,#140820 100%); }
+    .bg-7 { background: linear-gradient(160deg,#0a2028 0%,#103848 60%,#081820 100%); }
+    .bg-8 { background: linear-gradient(160deg,#281218 0%,#481828 60%,#200e14 100%); }
+    .bg-9 { background: linear-gradient(160deg,#102010 0%,#203a20 60%,#0a180a 100%); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <!-- Signal -->
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="8" width="3" height="4" rx="0.5" fill="white"/>
+        <rect x="4.5" y="5.5" width="3" height="6.5" rx="0.5" fill="white"/>
+        <rect x="9" y="3" width="3" height="9" rx="0.5" fill="white"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="white"/>
+      </svg>
+      <!-- WiFi -->
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="white"/>
+        <path d="M3.5 6.5C4.8 5.1 6.3 4.3 8 4.3s3.2.8 4.5 2.2" stroke="white" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        <path d="M1 3.8C3 1.7 5.4.5 8 .5s5 1.2 7 3.3" stroke="white" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="white" stroke-opacity="0.35"/>
+        <rect x="1.5" y="1.5" width="18" height="9" rx="2.5" fill="white"/>
+        <path d="M22.5 4v4a1.5 1.5 0 000-4z" fill="white" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <div class="nav-back">
+      <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+        <path d="M9 1L1 9l8 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="nav-title">랭킹 NOVEL</span>
+  </div>
+
+  <!-- Genre Chips -->
+  <div class="chips-wrap">
+    <div class="chip active">전체</div>
+    <div class="chip">판타지</div>
+    <div class="chip">무협</div>
+    <div class="chip">로맨스</div>
+    <div class="chip">로판</div>
+    <div class="chip">현판</div>
+    <div class="chip">BL</div>
+  </div>
+
+  <!-- Filter Row -->
+  <div class="filter-row">
+    <div class="filter-left">
+      <div class="checkbox"></div>
+      <span class="filter-label">완결</span>
+    </div>
+    <span class="filter-notice">한 시간에 한 번 갱신됩니다.</span>
+  </div>
+
+  <!-- Ranking List -->
+  <div class="ranking-list">
+
+    <!-- Row 1: 1~3위 -->
+    <div class="ranking-row">
+
+      <!-- 1위 -->
+      <div class="card">
+        <div class="card-thumb bg-1">
+          <div class="card-thumb-gradient"></div>
+          <!-- Trophy badge -->
+          <div class="badge-trophy">
+            <svg width="22" height="28" viewBox="0 0 22 28" fill="none">
+              <path d="M4 2.5h14L17 14H5L4 2.5z" fill="rgba(0,0,0,0.5)"/>
+              <path d="M5 14c0 3.3 2.7 6 6 6s6-2.7 6-6" stroke="#00dc64" stroke-width="1.2" fill="none"/>
+              <rect x="8.5" y="20" width="5" height="4" rx="0.5" fill="#00dc64"/>
+              <rect x="5" y="24" width="12" height="2.5" rx="1.25" fill="#00dc64"/>
+              <circle cx="11" cy="8" r="3" fill="rgba(0,220,100,0.3)" stroke="#00dc64" stroke-width="1"/>
+            </svg>
+          </div>
+          <!-- TopLeft clock -->
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <!-- Series badge -->
+          <div class="badge-series">S</div>
+          <!-- Free episodes -->
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">1</span>
+            <div class="rank-change">
+              <div class="rank-up-icon"></div>
+              <span class="rank-change-num">20</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-up">UP</span>
+            <span class="tag tag-in">IN</span>
+          </div>
+          <div class="card-title">몰락민족의 천재 마법사</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2위 -->
+      <div class="card">
+        <div class="card-thumb bg-2">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-trophy">
+            <svg width="22" height="28" viewBox="0 0 22 28" fill="none">
+              <path d="M4 2.5h14L17 14H5L4 2.5z" fill="rgba(0,0,0,0.5)"/>
+              <path d="M5 14c0 3.3 2.7 6 6 6s6-2.7 6-6" stroke="#00dc64" stroke-width="1.2" fill="none"/>
+              <rect x="8.5" y="20" width="5" height="4" rx="0.5" fill="#00dc64"/>
+              <rect x="5" y="24" width="12" height="2.5" rx="1.25" fill="#00dc64"/>
+            </svg>
+          </div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-series">S</div>
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">2</span>
+            <div class="rank-change">
+              <div class="rank-up-icon"></div>
+              <span class="rank-change-num">5</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-up">UP</span>
+          </div>
+          <div class="card-title">황제의 외로운 후계자</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3위 -->
+      <div class="card">
+        <div class="card-thumb bg-3">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-trophy">
+            <svg width="22" height="28" viewBox="0 0 22 28" fill="none">
+              <path d="M4 2.5h14L17 14H5L4 2.5z" fill="rgba(0,0,0,0.5)"/>
+              <path d="M5 14c0 3.3 2.7 6 6 6s6-2.7 6-6" stroke="#00dc64" stroke-width="1.2" fill="none"/>
+              <rect x="8.5" y="20" width="5" height="4" rx="0.5" fill="#00dc64"/>
+              <rect x="5" y="24" width="12" height="2.5" rx="1.25" fill="#00dc64"/>
+            </svg>
+          </div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">3</span>
+            <div class="rank-change">
+              <div class="rank-up-icon"></div>
+              <span class="rank-change-num">12</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-in">IN</span>
+          </div>
+          <div class="card-title">회귀자의 검신 일대기</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row 1 -->
+
+    <!-- Row 2: 4~6위 -->
+    <div class="ranking-row">
+
+      <!-- 4위 -->
+      <div class="card">
+        <div class="card-thumb bg-4">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-series">S</div>
+          <div class="badge-free">10화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">4</span>
+            <div class="rank-change">
+              <div class="rank-down-icon"></div>
+              <span class="rank-change-num down">3</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-exclusive">단독</span>
+          </div>
+          <div class="card-title">신들의 전쟁 2부: 빛의 계승자</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5위 -->
+      <div class="card">
+        <div class="card-thumb bg-5">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">5</span>
+            <span class="rank-new">NEW</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-up">UP</span>
+            <span class="tag tag-in">IN</span>
+          </div>
+          <div class="card-title">드래곤과 함께한 3000년</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6위 -->
+      <div class="card">
+        <div class="card-thumb bg-6">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-series">S</div>
+          <div class="badge-free">15화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">6</span>
+            <div class="rank-change">
+              <div class="rank-up-icon"></div>
+              <span class="rank-change-num">8</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-up">UP</span>
+          </div>
+          <div class="card-title">빙마검존의 재림</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row 2 -->
+
+    <!-- Row 3: 7~9위 -->
+    <div class="ranking-row">
+
+      <!-- 7위 -->
+      <div class="card">
+        <div class="card-thumb bg-7">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">7</span>
+            <div class="rank-change">
+              <div class="rank-down-icon"></div>
+              <span class="rank-change-num down">2</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-in">IN</span>
+          </div>
+          <div class="card-title">무한 던전의 마지막 생존자</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8위 -->
+      <div class="card">
+        <div class="card-thumb bg-8">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-series">S</div>
+          <div class="badge-free">25화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">8</span>
+            <div class="rank-change">
+              <div class="rank-up-icon"></div>
+              <span class="rank-change-num">1</span>
+            </div>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-up">UP</span>
+          </div>
+          <div class="card-title">로맨스 판타지의 여왕</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9위 -->
+      <div class="card">
+        <div class="card-thumb bg-9">
+          <div class="card-thumb-gradient"></div>
+          <div class="badge-tl">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1"/>
+              <path d="M6 3.5V6l1.5 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="badge-free">10화 무료</div>
+        </div>
+        <div class="card-content">
+          <div class="rank-row">
+            <span class="rank-num">9</span>
+            <span class="rank-new">NEW</span>
+          </div>
+          <div class="tag-row">
+            <span class="tag tag-in">IN</span>
+          </div>
+          <div class="card-title">검신전생록</div>
+          <div class="card-sub">
+            <span class="star-icon">★</span>
+            <span class="sub-text">강조정보</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row 3 -->
+
+  </div><!-- /ranking-list -->
+
+  <!-- Floating GNB -->
+  <div class="gnb-wrap">
+    <div class="gnb-pill">
+      <div class="gnb-tab active">실시간</div>
+      <div class="gnb-tab">일간</div>
+      <div class="gnb-tab">주간</div>
+      <div class="gnb-tab">메뉴명</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+</body>
+</html>
